@@ -107,7 +107,7 @@ void ExtendibleHash<K, V>::Insert(const K &key, const V &value) {
         } else it++;
       }
       for (size_t i = 0; i < buckets.size(); i++) {
-        if (buckets[i] == cur && (i & mask))
+        if (buckets[i] == dhdcur && (i & mask))
           buckets[i] = newBuc;
       }
     }
