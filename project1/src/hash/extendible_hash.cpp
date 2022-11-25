@@ -1,12 +1,12 @@
-//Û¡ºÆ´ï2019141410141
+//é‚¸æµ©è¾¾2019141410141
 #include <list>
 #include "hash/extendible_hash.h"
 #include "page/page.h"
 using namespace std;
 
 namespace scudb {
-//¹¹ÔìÆ÷
-//array_size: Ã¿¸ö´æ´¢Í°µÄ¹Ì¶¨Êı×é´óĞ¡
+//æ„é€ å™¨
+//array_size: æ¯ä¸ªå­˜å‚¨æ¡¶çš„å›ºå®šæ•°ç»„å¤§å°
 template <typename K, typename V>
 ExtendibleHash<K, V>::ExtendibleHash(size_t size) :  globalDepth(0),bucketSize(size),bucketNum(1) {
   buckets.push_back(make_shared<Bucket>(0));
@@ -15,18 +15,18 @@ template<typename K, typename V>
 ExtendibleHash<K, V>::ExtendibleHash() {
   ExtendibleHash(64);
 }
-//ÓÃÓÚ¼ÆËãÊäÈë¼üµÄ¹şÏ£µØÖ·
+//ç”¨äºè®¡ç®—è¾“å…¥é”®çš„å“ˆå¸Œåœ°å€
 template <typename K, typename V>
 size_t ExtendibleHash<K, V>::HashKey(const K &key) const{
   return hash<K>{}(key);
 }
-//·µ»Ø¹şÏ£±íÈ«¾ÖÉî¶È
+//è¿”å›å“ˆå¸Œè¡¨å…¨å±€æ·±åº¦
 template <typename K, typename V>
 int ExtendibleHash<K, V>::GetGlobalDepth() const{
   lock_guard<mutex> lock(latch);
   return globalDepth;
 }
-//·µ»ØÒ»¸öÌØ¶¨Í°µÄ¾Ö²¿Éî¶È
+//è¿”å›ä¸€ä¸ªç‰¹å®šæ¡¶çš„å±€éƒ¨æ·±åº¦
 template <typename K, typename V>
 int ExtendibleHash<K, V>::GetLocalDepth(int bucket_id) const {
   if (buckets[bucket_id]) {
@@ -36,20 +36,20 @@ int ExtendibleHash<K, V>::GetLocalDepth(int bucket_id) const {
   }
   return -1;
 }
-//ÓÃÓÚ·µ»Ø¹şÏ£±íÖĞÍ°µÄµ±Ç°ÊıÁ¿
+//ç”¨äºè¿”å›å“ˆå¸Œè¡¨ä¸­æ¡¶çš„å½“å‰æ•°é‡
 template <typename K, typename V>
 int ExtendibleHash<K, V>::GetNumBuckets() const{
   lock_guard<mutex> lock(latch);
   return bucketNum;
 }
-//²éÕÒÓëÊäÈë¼ü¹ØÁªµÄÖµµÄº¯Êı
+//æŸ¥æ‰¾ä¸è¾“å…¥é”®å…³è”çš„å€¼çš„å‡½æ•°
 template <typename K, typename V>
 bool ExtendibleHash<K, V>::Find(const K &key, V &value) {
 
-  int idx = getIdx(key);
-  lock_guard<mutex> lck(buckets[idx]->latch);
-  if (buckets[idx]->kmap.find(key) != buckets[idx]->kmap.end()) {
-    value = buckets[idx]->kmap[key];
+  int dhdidx = getIdx(key);
+  lock_guard<mutex> lck(buckets[dhdidx]->latch);
+  if (buckets[dhdidx]->kmap.find(key) != buckets[dhdidx]->kmap.end()) {
+    value = buckets[dhdidx]->kmap[key];
     return true;
   }
   return false;
@@ -59,35 +59,35 @@ int ExtendibleHash<K, V>::getIdx(const K &key) const{
   lock_guard<mutex> lck(latch);
   return HashKey(key) & ((1 << globalDepth) - 1);
 }
-//É¾³ı¹şÏ£±íÖĞµÄ£¼key£¬value£¾ÌõÄ¿
+//åˆ é™¤å“ˆå¸Œè¡¨ä¸­çš„ï¼œkeyï¼Œvalueï¼æ¡ç›®
 template <typename K, typename V>
 bool ExtendibleHash<K, V>::Remove(const K &key) {
-  int idx = getIdx(key);
-  lock_guard<mutex> lck(buckets[idx]->latch);
-  shared_ptr<Bucket> cur = buckets[idx];
-  if (cur->kmap.find(key) == cur->kmap.end()) {
+  int dhdidx = getIdx(key);
+  lock_guard<mutex> lck(buckets[dhdidx]->latch);
+  shared_ptr<Bucket> dhdcur = buckets[dhdidx];
+  if (dhdcur->kmap.find(key) == dhdcur->kmap.end()) {
     return false;
   }
-  cur->kmap.erase(key);
+  dhdcur->kmap.erase(key);
   return true;
 }
-//ÔÚ¹şÏ£±íÖĞ²åÈë£¼key£¬value£¾ÌõÄ¿
+//åœ¨å“ˆå¸Œè¡¨ä¸­æ’å…¥ï¼œkeyï¼Œvalueï¼æ¡ç›®
 template <typename K, typename V>
 void ExtendibleHash<K, V>::Insert(const K &key, const V &value) {
-  int idx = getIdx(key);
-  shared_ptr<Bucket> cur = buckets[idx];
+  int dhdidx = getIdx(key);
+  shared_ptr<Bucket> dhdcur = buckets[dhdidx];
   while (true) {
-    lock_guard<mutex> lck(cur->latch);
-    if (cur->kmap.find(key) != cur->kmap.end() || cur->kmap.size() < bucketSize) {
-      cur->kmap[key] = value;
+    lock_guard<mutex> lck(dhdcur->latch);
+    if (dhdcur->kmap.find(key) != dhdcur->kmap.end() || dhdcur->kmap.size() < bucketSize) {
+      dhdcur->kmap[key] = value;
       break;
     }
-    int mask = (1 << (cur->localDepth));
-    cur->localDepth++;
+    int mask = (1 << (dhdcur->localDepth));
+    dhdcur->localDepth++;
 
     {
       lock_guard<mutex> lck2(latch);
-      if (cur->localDepth > globalDepth) {
+      if (dhdcur->localDepth > globalDepth) {
 
         size_t length = buckets.size();
         for (size_t i = 0; i < length; i++) {
@@ -97,13 +97,13 @@ void ExtendibleHash<K, V>::Insert(const K &key, const V &value) {
 
       }
       bucketNum++;
-      auto newBuc = make_shared<Bucket>(cur->localDepth);
+      auto newBuc = make_shared<Bucket>(dhdcur->localDepth);
 
       typename map<K, V>::iterator it;
-      for (it = cur->kmap.begin(); it != cur->kmap.end(); ) {
+      for (it = dhdcur->kmap.begin(); it != dhdcur->kmap.end(); ) {
         if (HashKey(it->first) & mask) {
           newBuc->kmap[it->first] = it->second;
-          it = cur->kmap.erase(it);
+          it = dhdcur->kmap.erase(it);
         } else it++;
       }
       for (size_t i = 0; i < buckets.size(); i++) {
@@ -111,8 +111,8 @@ void ExtendibleHash<K, V>::Insert(const K &key, const V &value) {
           buckets[i] = newBuc;
       }
     }
-    idx = getIdx(key);
-    cur = buckets[idx];
+    dhdidx = getIdx(key);
+    dhdcur = buckets[dhdidx];
   }
 }
 template class ExtendibleHash<page_id_t, Page *>;
@@ -120,4 +120,4 @@ template class ExtendibleHash<Page *, std::list<Page *>::iterator>;
 template class ExtendibleHash<int, std::string>;
 template class ExtendibleHash<int, std::list<int>::iterator>;
 template class ExtendibleHash<int, int>;
-} // ÃüÃû¿Õ¼ä scudb
+} // å‘½åç©ºé—´ scudb
