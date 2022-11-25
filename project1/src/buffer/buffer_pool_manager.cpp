@@ -1,21 +1,21 @@
-//Û¡ºÆ´ï2019141410141
+//é‚¸æµ©è¾¾2019141410141
 #include "buffer/buffer_pool_manager.h"
 
 namespace scudb {
-//BufferPoolManager½á¹¹Æ÷
-//µ±log_managerÊÇnullptrµÄÊ±ºò, logging±»½ûÓÃ
+//BufferPoolManagerç»“æ„å™¨
+//å½“log_manageræ˜¯nullptrçš„æ—¶å€™, loggingè¢«ç¦ç”¨
 BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager, LogManager *log_manager) : pool_size_(pool_size), disk_manager_(disk_manager), log_manager_(log_manager) {
-  //»º³å³ØµÄÁ¬ĞøÄÚ´æ¿Õ¼ä
+  //ç¼“å†²æ± çš„è¿ç»­å†…å­˜ç©ºé—´
   pages_ = new Page[pool_size_];
   page_table_ = new ExtendibleHash<page_id_t, Page *>(BUCKET_SIZE);
   replacer_ = new LRUReplacer<Page *>;
   free_list_ = new std::list<Page *>;
-  //½«ËùÓĞÒ³Ãæ·ÅÈë¿ÕÏĞÁĞ±í
+  //å°†æ‰€æœ‰é¡µé¢æ”¾å…¥ç©ºé—²åˆ—è¡¨
   for (size_t i = 0; i < pool_size_; ++i) {
     free_list_->push_back(&pages_[i]);
   }
 }
-//BufferPoolManagerÎö¹¹Æ÷
+//BufferPoolManagerææ„å™¨
 BufferPoolManager::~BufferPoolManager() {
   delete[] pages_;
   delete page_table_;
@@ -23,134 +23,134 @@ BufferPoolManager::~BufferPoolManager() {
   delete free_list_;
 }
 /**
-1. ËÑË÷¹şÏ£±í
-1.1 Èç¹û´æÔÚ£¬ÇëËø¶¨Ò³Ãæ²¢Á¢¼´·µ»Ø
-1.2 Èç¹û²»´æÔÚ£¬Çë´Ó×ÔÓÉÁĞ±í»òlruÖĞ²éÕÒÌæ»»ÌõÄ¿¸ü»»Æ÷¡££¨×¢Òâ£º×ÜÊÇÏÈ´Ó×ÔÓÉÁĞ±íÖĞ²éÕÒ£©
-2. Èç¹ûÑ¡ÔñÌæ»»µÄÌõÄ¿ÊÇÔàµÄ£¬Çë½«ÆäĞ´»Ø´ÅÅÌ¡£
-3. ´Ó¹şÏ£±íÖĞÉ¾³ı¾ÉÒ³ÃæµÄÌõÄ¿£¬²¢²åÈëĞÂÒ³ÃæµÄÌõÄ¿¡£
-4. ¸üĞÂÒ³ÃæÔªÊı¾İ£¬´Ó´ÅÅÌÎÄ¼ş¶ÁÈ¡Ò³ÃæÄÚÈİ²¢·µ»ØÒ³ÃæÖ¸Õë
+1. æœç´¢å“ˆå¸Œè¡¨
+1.1 å¦‚æœå­˜åœ¨ï¼Œè¯·é”å®šé¡µé¢å¹¶ç«‹å³è¿”å›
+1.2 å¦‚æœä¸å­˜åœ¨ï¼Œè¯·ä»è‡ªç”±åˆ—è¡¨æˆ–lruä¸­æŸ¥æ‰¾æ›¿æ¢æ¡ç›®æ›´æ¢å™¨ã€‚ï¼ˆæ³¨æ„ï¼šæ€»æ˜¯å…ˆä»è‡ªç”±åˆ—è¡¨ä¸­æŸ¥æ‰¾ï¼‰
+2. å¦‚æœé€‰æ‹©æ›¿æ¢çš„æ¡ç›®æ˜¯è„çš„ï¼Œè¯·å°†å…¶å†™å›ç£ç›˜ã€‚
+3. ä»å“ˆå¸Œè¡¨ä¸­åˆ é™¤æ—§é¡µé¢çš„æ¡ç›®ï¼Œå¹¶æ’å…¥æ–°é¡µé¢çš„æ¡ç›®ã€‚
+4. æ›´æ–°é¡µé¢å…ƒæ•°æ®ï¼Œä»ç£ç›˜æ–‡ä»¶è¯»å–é¡µé¢å†…å®¹å¹¶è¿”å›é¡µé¢æŒ‡é’ˆ
 */
 Page *BufferPoolManager::FetchPage(page_id_t page_id) {
   lock_guard<mutex> lck(latch_);
-  Page *tar = nullptr;
-  if (page_table_->Find(page_id,tar)) {
-    tar->pin_count_++;
-    replacer_->Erase(tar);
-    return tar;
+  Page *dhdtar = nullptr;
+  if (page_table_->Find(page_id,dhdtar)) {
+    dhdtar->pin_count_++;
+    replacer_->Erase(dhdtar);
+    return dhdtar;
   }
-  tar = GetVictimPage();
-  if (tar == nullptr) return tar;
-  if (tar->is_dirty_) {
-    disk_manager_->WritePage(tar->GetPageId(),tar->data_);
+  dhdtar = GetVictimPage();
+  if (dhdtar == nullptr) return dhdtar;
+  if (dhdtar->is_dirty_) {
+    disk_manager_->WritePage(dhdtar->GetPageId(),dhdtar->data_);
   }
-  page_table_->Remove(tar->GetPageId());
-  page_table_->Insert(page_id,tar);
-  disk_manager_->ReadPage(page_id,tar->data_);
-  tar->pin_count_ = 1;
-  tar->is_dirty_ = false;
-  tar->page_id_= page_id;
-  return tar;
+  page_table_->Remove(dhdtar->GetPageId());
+  page_table_->Insert(page_id,dhdtar);
+  disk_manager_->ReadPage(page_id,dhdtar->data_);
+  dhdtar->pin_count_ = 1;
+  dhdtar->is_dirty_ = false;
+  dhdtar->page_id_= page_id;
+  return dhdtar;
 }
 /*
-1. ËÑË÷¹şÏ£±í
-1.1 Èç¹û´æÔÚ£¬ÇëËø¶¨Ò³Ãæ²¢Á¢¼´·µ»Ø
-1.2 Èç¹û²»´æÔÚ£¬Çë´Ó×ÔÓÉÁĞ±í»òlruÖĞ²éÕÒÌæ»»ÌõÄ¿¸ü»»Æ÷¡££¨×¢Òâ£º×ÜÊÇÏÈ´Ó×ÔÓÉÁĞ±íÖĞ²éÕÒ£©
-2. Èç¹ûÑ¡ÔñÌæ»»µÄÌõÄ¿ÊÇÔàµÄ£¬Çë½«ÆäĞ´»Ø´ÅÅÌ¡£
-3. ´Ó¹şÏ£±íÖĞÉ¾³ı¾ÉÒ³ÃæµÄÌõÄ¿£¬²¢²åÈëĞÂÒ³ÃæµÄÌõÄ¿¡£
-4. ¸üĞÂÒ³ÃæÔªÊı¾İ£¬´Ó´ÅÅÌÎÄ¼ş¶ÁÈ¡Ò³ÃæÄÚÈİ²¢·µ»ØÒ³ÃæÖ¸Õë
+1. æœç´¢å“ˆå¸Œè¡¨
+1.1 å¦‚æœå­˜åœ¨ï¼Œè¯·é”å®šé¡µé¢å¹¶ç«‹å³è¿”å›
+1.2 å¦‚æœä¸å­˜åœ¨ï¼Œè¯·ä»è‡ªç”±åˆ—è¡¨æˆ–lruä¸­æŸ¥æ‰¾æ›¿æ¢æ¡ç›®æ›´æ¢å™¨ã€‚ï¼ˆæ³¨æ„ï¼šæ€»æ˜¯å…ˆä»è‡ªç”±åˆ—è¡¨ä¸­æŸ¥æ‰¾ï¼‰
+2. å¦‚æœé€‰æ‹©æ›¿æ¢çš„æ¡ç›®æ˜¯è„çš„ï¼Œè¯·å°†å…¶å†™å›ç£ç›˜ã€‚
+3. ä»å“ˆå¸Œè¡¨ä¸­åˆ é™¤æ—§é¡µé¢çš„æ¡ç›®ï¼Œå¹¶æ’å…¥æ–°é¡µé¢çš„æ¡ç›®ã€‚
+4. æ›´æ–°é¡µé¢å…ƒæ•°æ®ï¼Œä»ç£ç›˜æ–‡ä»¶è¯»å–é¡µé¢å†…å®¹å¹¶è¿”å›é¡µé¢æŒ‡é’ˆ
 */
 bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty) {
   lock_guard<mutex> lck(latch_);
-  Page *tar = nullptr;
-  page_table_->Find(page_id,tar);
-  if (tar == nullptr) {
+  Page *dhdtar = nullptr;
+  page_table_->Find(page_id,dhdtar);
+  if (dhdtar == nullptr) {
     return false;
   }
-  tar->is_dirty_ = is_dirty;
-  if (tar->GetPinCount() <= 0) {
+  dhdtar->is_dirty_ = is_dirty;
+  if (dhdtar->GetPinCount() <= 0) {
     return false;
   }
   ;
-  if (--tar->pin_count_ == 0) {
-    replacer_->Insert(tar);
+  if (--dhdtar->pin_count_ == 0) {
+    replacer_->Insert(dhdtar);
   }
   return true;
 }
 /*
-ÓÃÓÚ½«»º³å³ØµÄÌØ¶¨Ò³ÃæË¢ĞÂµ½´ÅÅÌ¡£Ó¦µ÷ÓÃ´ÅÅÌ¹ÜÀíÆ÷µÄwrite_page·½·¨
-Èç¹ûÔÚÒ³±íÖĞÕÒ²»µ½Ò³£¬Ôò·µ»Øfalse
-×¢Òâ£ºÈ·±£page_id != ÎŞĞ§µÄÒ³ÃæID
+ç”¨äºå°†ç¼“å†²æ± çš„ç‰¹å®šé¡µé¢åˆ·æ–°åˆ°ç£ç›˜ã€‚åº”è°ƒç”¨ç£ç›˜ç®¡ç†å™¨çš„write_pageæ–¹æ³•
+å¦‚æœåœ¨é¡µè¡¨ä¸­æ‰¾ä¸åˆ°é¡µï¼Œåˆ™è¿”å›false
+æ³¨æ„ï¼šç¡®ä¿page_id != æ— æ•ˆçš„é¡µé¢ID
 */
 bool BufferPoolManager::FlushPage(page_id_t page_id) {
   lock_guard<mutex> lck(latch_);
-  Page *tar = nullptr;
-  page_table_->Find(page_id,tar);
-  if (tar == nullptr || tar->page_id_ == INVALID_PAGE_ID) {
+  Page *dhdtar = nullptr;
+  page_table_->Find(page_id,dhdtar);
+  if (dhdtar == nullptr || dhdtar->page_id_ == INVALID_PAGE_ID) {
     return false;
   }
-  if (tar->is_dirty_) {
-    disk_manager_->WritePage(page_id,tar->GetData());
-    tar->is_dirty_ = false;
+  if (dhdtar->is_dirty_) {
+    disk_manager_->WritePage(page_id,dhdtar->GetData());
+    dhdtar->is_dirty_ = false;
   }
   return true;
 }
 
 /*
-ÓÃ»§Ó¦µ÷ÓÃ´Ë·½·¨É¾³ıÒ³Ãæ¡£´ËÀı³Ì½«µ÷ÓÃ´ÅÅÌ¹ÜÀíÆ÷ÒÔÊÍ·ÅÒ³Ãæ¡£Ê×ÏÈ£¬Èç¹ûÔÚÒ³ÃæÖĞÕÒµ½Ò³Ãæ±í£¬»º³å³Ø¹ÜÀíÆ÷Ó¦¸ºÔğÉ¾³ı´ËÌõÄ¿
-ÖØĞÂÉèÖÃÒ³ÃæÔªÊı¾İ²¢Ìí¼Ó»Ø×ÔÓÉÁĞ±í¡£µÚ¶şµ÷ÓÃ´ÅÅÌ¹ÜÀíÆ÷µÄDeallocatePage()·½·¨´Ó´ÅÅÌÎÄ¼şÖĞÉ¾³ı¡£Èç¹ûÒ³ÃæÔÚÒ³Ãæ±íÖĞÕÒµ½£¬µ«pin_count != 0£¬·µ»Øfalse
+ç”¨æˆ·åº”è°ƒç”¨æ­¤æ–¹æ³•åˆ é™¤é¡µé¢ã€‚æ­¤ä¾‹ç¨‹å°†è°ƒç”¨ç£ç›˜ç®¡ç†å™¨ä»¥é‡Šæ”¾é¡µé¢ã€‚é¦–å…ˆï¼Œå¦‚æœåœ¨é¡µé¢ä¸­æ‰¾åˆ°é¡µé¢è¡¨ï¼Œç¼“å†²æ± ç®¡ç†å™¨åº”è´Ÿè´£åˆ é™¤æ­¤æ¡ç›®
+é‡æ–°è®¾ç½®é¡µé¢å…ƒæ•°æ®å¹¶æ·»åŠ å›è‡ªç”±åˆ—è¡¨ã€‚ç¬¬äºŒè°ƒç”¨ç£ç›˜ç®¡ç†å™¨çš„DeallocatePage()æ–¹æ³•ä»ç£ç›˜æ–‡ä»¶ä¸­åˆ é™¤ã€‚å¦‚æœé¡µé¢åœ¨é¡µé¢è¡¨ä¸­æ‰¾åˆ°ï¼Œä½†pin_count != 0ï¼Œè¿”å›false
 */
 bool BufferPoolManager::DeletePage(page_id_t page_id) {
   lock_guard<mutex> lck(latch_);
-  Page *tar = nullptr;
-  page_table_->Find(page_id,tar);
-  if (tar != nullptr) {
-    if (tar->GetPinCount() > 0) {
+  Page *dhdtar = nullptr;
+  page_table_->Find(page_id,dhdtar);
+  if (dhdtar != nullptr) {
+    if (dhdtar->GetPinCount() > 0) {
       return false;
     }
-    replacer_->Erase(tar);
+    replacer_->Erase(dhdtar);
     page_table_->Remove(page_id);
-    tar->is_dirty_= false;
-    tar->ResetMemory();
-    free_list_->push_back(tar);
+    dhdtar->is_dirty_= false;
+    dhdtar->ResetMemory();
+    free_list_->push_back(dhdtar);
   }
   disk_manager_->DeallocatePage(page_id);
   return true;
 }
 /*
-Èç¹ûĞèÒª´´½¨ĞÂÒ³Ãæ£¬ÓÃ»§Ó¦µ÷ÓÃ´Ë·½·¨¡£´ËÀı³Ìµ÷ÓÃ´ÅÅÌ¹ÜÀíÆ÷À´·ÖÅäÒ³Ãæ¡£
-»º³å³Ø¹ÜÀíÆ÷Ó¦¸ºÔğÑ¡ÔñÊÜº¦Ò³Ãæ´Ó¿ÕÏĞÁĞ±í»òlru-replacer£¨×¢Òâ£ºÊ¼ÖÕÏÈ´Ó¿ÕÏĞÁĞ±íÖĞÑ¡Ôñ£©£¬
-¸üĞÂĞÂÒ³ÃæµÄÔªÊı¾İ£¬Çå¿ÕÄÚ´æ²¢Ìí¼ÓÏàÓ¦µÄÌõÄ¿µ½Ò³±íÖĞ¡£Èç¹û³ØÖĞµÄËùÓĞÒ³Ãæ¶¼±»¹Ì¶¨£¬Ôò·µ»Ønullptr
+å¦‚æœéœ€è¦åˆ›å»ºæ–°é¡µé¢ï¼Œç”¨æˆ·åº”è°ƒç”¨æ­¤æ–¹æ³•ã€‚æ­¤ä¾‹ç¨‹è°ƒç”¨ç£ç›˜ç®¡ç†å™¨æ¥åˆ†é…é¡µé¢ã€‚
+ç¼“å†²æ± ç®¡ç†å™¨åº”è´Ÿè´£é€‰æ‹©å—å®³é¡µé¢ä»ç©ºé—²åˆ—è¡¨æˆ–lru-replacerï¼ˆæ³¨æ„ï¼šå§‹ç»ˆå…ˆä»ç©ºé—²åˆ—è¡¨ä¸­é€‰æ‹©ï¼‰ï¼Œ
+æ›´æ–°æ–°é¡µé¢çš„å…ƒæ•°æ®ï¼Œæ¸…ç©ºå†…å­˜å¹¶æ·»åŠ ç›¸åº”çš„æ¡ç›®åˆ°é¡µè¡¨ä¸­ã€‚å¦‚æœæ± ä¸­çš„æ‰€æœ‰é¡µé¢éƒ½è¢«å›ºå®šï¼Œåˆ™è¿”å›nullptr
 */
 Page *BufferPoolManager::NewPage(page_id_t &page_id) {
   lock_guard<mutex> lck(latch_);
-  Page *tar = nullptr;
-  tar = GetVictimPage();
-  if (tar == nullptr) return tar;
+  Page *dhdtar = nullptr;
+  dhdtar = GetVictimPage();
+  if (dhdtar == nullptr) return dhdtar;
   page_id = disk_manager_->AllocatePage();
-  if (tar->is_dirty_) {
-    disk_manager_->WritePage(tar->GetPageId(),tar->data_);
+  if (dhdtar->is_dirty_) {
+    disk_manager_->WritePage(dhdtar->GetPageId(),dhdtar->data_);
   }
-  page_table_->Remove(tar->GetPageId());
-  page_table_->Insert(page_id,tar);
-  tar->page_id_ = page_id;
-  tar->ResetMemory();
-  tar->is_dirty_ = false;
-  tar->pin_count_ = 1;
-  return tar;
+  page_table_->Remove(dhdtar->GetPageId());
+  page_table_->Insert(page_id,dhdtar);
+  dhdtar->page_id_ = page_id;
+  dhdtar->ResetMemory();
+  dhdtar->is_dirty_ = false;
+  dhdtar->pin_count_ = 1;
+  return dhdtar;
 }
 Page *BufferPoolManager::GetVictimPage() {
-  Page *tar = nullptr;
+  Page *dhdtar = nullptr;
   if (free_list_->empty()) {
     if (replacer_->Size() == 0) {
       return nullptr;
     }
-    replacer_->Victim(tar);
+    replacer_->Victim(dhdtar);
   } else {
-    tar = free_list_->front();
+    dhdtar = free_list_->front();
     free_list_->pop_front();
-    assert(tar->GetPageId() == INVALID_PAGE_ID);
+    assert(dhdtar->GetPageId() == INVALID_PAGE_ID);
   }
-  assert(tar->GetPinCount() == 0);
-  return tar;
+  assert(dhdtar->GetPinCount() == 0);
+  return dhdtar;
 }
-} // ÃüÃû¿Õ¼äscudb
+} // å‘½åç©ºé—´scudb
