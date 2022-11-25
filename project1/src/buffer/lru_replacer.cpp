@@ -1,5 +1,5 @@
-//Û¡ºÆ´ï2019141410141
-//ÊµÏÖLRU
+//é‚¸æµ©è¾¾2019141410141
+//å®ç°LRU
 #include "buffer/lru_replacer.h"
 #include "page/page.h"
 
@@ -11,47 +11,47 @@ template <typename T> LRUReplacer<T>::LRUReplacer() {
   tail->prev = head;
 }
 template <typename T> LRUReplacer<T>::~LRUReplacer() {}
-//ÏòLRUÖĞ²åÈëvalue
+//å‘LRUä¸­æ’å…¥value
 template <typename T> void LRUReplacer<T>::Insert(const T &value) {
   lock_guard<mutex> lck(latch);
-  shared_ptr<Node> cur;
+  shared_ptr<Node> dhdcur;
   if (map.find(value) != map.end()) {
-    cur = map[value];
-    shared_ptr<Node> prev = cur->prev;
-    shared_ptr<Node> succ = cur->next;
-    prev->next = succ;
-    succ->prev = prev;
+    dhdcur = map[value];
+    shared_ptr<Node> dhdprev = dhdcur->dhdprev;
+    shared_ptr<Node> dhdsucc = dhdcur->next;
+    dhdprev->next = dhdsucc;
+    dhdsucc->dhdprev = dhdprev;
   } else {
-    cur = make_shared<Node>(value);
+    dhdcur = make_shared<Node>(value);
   }
-  shared_ptr<Node> fir = head->next;
-  cur->next = fir;
-  fir->prev = cur;
-  cur->prev = head;
-  head->next = cur;
-  map[value] = cur;
+  shared_ptr<Node> dhdfir = head->next;
+  dhdcur->next = dhdfir;
+  dhdfir->prev = dhdcur;
+  dhdcur->prev = head;
+  head->next = dhdcur;
+  map[value] = dhdcur;
   return;
 }
-//Èç¹ûLRUÎª·Ç¿Õ£¬Ôò½«LRUÖĞµÄÍ·³ÉÔ±µ¯³öµ½²ÎÊıvalue£¬²¢ÇÒ·µ»Øtrue¡£Èç¹ûLRUÎª¿Õ£¬Ôò·µ»Øfalse
+//å¦‚æœLRUä¸ºéç©ºï¼Œåˆ™å°†LRUä¸­çš„å¤´æˆå‘˜å¼¹å‡ºåˆ°å‚æ•°valueï¼Œå¹¶ä¸”è¿”å›trueã€‚å¦‚æœLRUä¸ºç©ºï¼Œåˆ™è¿”å›false
 template <typename T> bool LRUReplacer<T>::Victim(T &value) {
   lock_guard<mutex> lck(latch);
   if (map.empty()) {
     return false;
   }
-  shared_ptr<Node> last = tail->prev;
-  tail->prev = last->prev;
-  last->prev->next = tail;
-  value = last->val;
-  map.erase(last->val);
+  shared_ptr<Node> dhdlast = tail->prev;
+  tail->prev = dhdlast->prev;
+  dhdlast->prev->next = tail;
+  value = dhdlast->val;
+  map.erase(dhdlast->val);
   return true;
 }
-//´ÓLRUÖĞÉ¾³ıÖµ¡£Èç¹ûÉ¾³ı³É¹¦£¬Ôò·µ»Øtrue£¬·ñÔò·µ»Øfalse
+//ä»LRUä¸­åˆ é™¤å€¼ã€‚å¦‚æœåˆ é™¤æˆåŠŸï¼Œåˆ™è¿”å›trueï¼Œå¦åˆ™è¿”å›false
 template <typename T> bool LRUReplacer<T>::Erase(const T &value) {
   lock_guard<mutex> lck(latch);
   if (map.find(value) != map.end()) {
-    shared_ptr<Node> cur = map[value];
-    cur->prev->next = cur->next;
-    cur->next->prev = cur->prev;
+    shared_ptr<Node> dhdcur = map[value];
+    dhdcur->prev->next = dhdcur->next;
+    dhdcur->next->prev = dhdcur->prev;
   }
   return map.erase(value);
 }
@@ -61,4 +61,4 @@ template <typename T> size_t LRUReplacer<T>::Size() {
 }
 template class LRUReplacer<Page *>;
 template class LRUReplacer<int>;
-} // ÃüÃû¿Õ¼äscudb
+} // å‘½åç©ºé—´scudb
