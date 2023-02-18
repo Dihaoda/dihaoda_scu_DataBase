@@ -16,9 +16,9 @@ namespace scudb {
  *****************************************************************************/
 
 /**
- * Init method after creating a new leaf page
- * Including set page type, set current size to zero, set page id/parent id, set
- * next page id and set max size
+ *创建新叶页后的Init方法
+ *包括设置页面类型，将当前大小设置为零，设置页面id/父id，设置
+ *下一页id并设置最大大小
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::Init(page_id_t page_id, page_id_t parent_id) {
@@ -32,7 +32,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::Init(page_id_t page_id, page_id_t parent_id) {
 }
 
 /**
- * Helper methods to set/get next page id
+ * 设置/获取下一页id的帮助程序方法
  */
 INDEX_TEMPLATE_ARGUMENTS
 page_id_t B_PLUS_TREE_LEAF_PAGE_TYPE::GetNextPageId() const {
@@ -43,8 +43,8 @@ INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::SetNextPageId(page_id_t next_page_id) {next_page_id_ = next_page_id;}
 
 /**
- * Helper method to find the first index i so that array[i].first >= key
- * NOTE: This method is only used when generating index iterator
+ *Helper方法查找第一个索引i，使array[i].first>=键
+ *注意：此方法仅在生成索引迭代器时使用
  */
 INDEX_TEMPLATE_ARGUMENTS
 int B_PLUS_TREE_LEAF_PAGE_TYPE::KeyIndex(
@@ -60,8 +60,8 @@ int B_PLUS_TREE_LEAF_PAGE_TYPE::KeyIndex(
 }
 
 /*
- * Helper method to find and return the key associated with input "index"(a.k.a
- * array offset)
+ *用于查找并返回与输入“index”（又名
+ *阵列偏移）
  */
 INDEX_TEMPLATE_ARGUMENTS
 KeyType B_PLUS_TREE_LEAF_PAGE_TYPE::KeyAt(int index) const {
@@ -70,8 +70,8 @@ KeyType B_PLUS_TREE_LEAF_PAGE_TYPE::KeyAt(int index) const {
 }
 
 /*
- * Helper method to find and return the key & value pair associated with input
- * "index"(a.k.a array offset)
+ *用于查找并返回与输入关联的键和值对的Helper方法
+ *“索引”（也称为数组偏移量）
  */
 INDEX_TEMPLATE_ARGUMENTS
 const MappingType &B_PLUS_TREE_LEAF_PAGE_TYPE::GetItem(int index) {
@@ -83,8 +83,8 @@ const MappingType &B_PLUS_TREE_LEAF_PAGE_TYPE::GetItem(int index) {
  * INSERTION
  *****************************************************************************/
 /*
- * Insert key & value pair into leaf page ordered by key
- * @return  page size after insertion
+ *将键值对插入到按键排序的叶页中（&V）
+ *插入后@返回页面大小
  */
 INDEX_TEMPLATE_ARGUMENTS
 int B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(const KeyType &key,
@@ -107,7 +107,7 @@ int B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(const KeyType &key,
  * SPLIT
  *****************************************************************************/
 /*
- * Remove half of key & value pairs from this page to "recipient" page
+ * 从此页面中删除一半密钥和值对到“收件人”页面
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveHalfTo(
@@ -116,16 +116,16 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveHalfTo(
   assert(recipient != nullptr);
   int total = GetMaxSize() + 1;
   assert(GetSize() == total);
-  //copy last half
+  //复制最后一半
   int copyIdx = (total)/2;//7 is 4,5,6,7; 8 is 4,5,6,7,8
   for (int i = copyIdx; i < total; i++) {
     recipient->array[i - copyIdx].first = array[i].first;
     recipient->array[i - copyIdx].second = array[i].second;
   }
-  //set pointer
+  //设置指针
   recipient->SetNextPageId(GetNextPageId());
   SetNextPageId(recipient->GetPageId());
-  //set size, is odd, bigger is last part
+  //集合大小，是奇数，较大的是最后一部分
   SetSize(copyIdx);
   recipient->SetSize(total - copyIdx);
 
@@ -138,9 +138,9 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyHalfFrom(MappingType *items, int size) {}
  * LOOKUP
  *****************************************************************************/
 /*
- * For the given key, check to see whether it exists in the leaf page. If it
- * does, then store its corresponding value in input "value" and return true.
- * If the key does not exist, then return false
+ *对于给定的键，检查它是否存在于叶页中。如果它
+ *则将其相应值存储在输入“value”中并返回true。
+ *如果密钥不存在，则返回false
  */
 INDEX_TEMPLATE_ARGUMENTS
 bool B_PLUS_TREE_LEAF_PAGE_TYPE::Lookup(const KeyType &key, ValueType &value,
@@ -157,10 +157,10 @@ bool B_PLUS_TREE_LEAF_PAGE_TYPE::Lookup(const KeyType &key, ValueType &value,
  * REMOVE
  *****************************************************************************/
 /*
- * First look through leaf page to see whether delete key exist or not. If
- * exist, perform deletion, otherwise return immdiately.
- * NOTE: store key&value pair continuously after deletion
- * @return   page size after deletion
+ *首先查看叶页，看看是否存在删除键。如果
+ *存在，执行删除，否则立即返回。
+ *注意：删除后连续存储密钥和值对
+ *删除后@返回页面大小
  */
 INDEX_TEMPLATE_ARGUMENTS
 int B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveAndDeleteRecord(
@@ -181,23 +181,23 @@ int B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveAndDeleteRecord(
  * MERGE
  *****************************************************************************/
 /*
- * Remove all of key & value pairs from this page to "recipient" page, then
- * update next page id
+ *将此页面中的所有键值对删除到“收件人”页面，然后
+ *更新下一页id
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveAllTo(BPlusTreeLeafPage *recipient,
                                            int, BufferPoolManager *) {
   assert(recipient != nullptr);
 
-  //copy last half
+  //复制最后一半
   int startIdx = recipient->GetSize();//7 is 4,5,6,7; 8 is 4,5,6,7,8
   for (int i = 0; i < GetSize(); i++) {
     recipient->array[startIdx + i].first = array[i].first;
     recipient->array[startIdx + i].second = array[i].second;
   }
-  //set pointer
+  //设置指针
   recipient->SetNextPageId(GetNextPageId());
-  //set size, is odd, bigger is last part
+  //集合大小，是奇数，较大的是最后一部分
   recipient->IncreaseSize(GetSize());
   SetSize(0);
 
@@ -209,8 +209,8 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyAllFrom(MappingType *items, int size) {}
  * REDISTRIBUTE
  *****************************************************************************/
 /*
- * Remove the first key & value pair from this page to "recipient" page, then
- * update relavent key & value pair in its parent page.
+ *将此页面中的第一个关键字和值对删除到“收件人”页面，然后
+ *更新父页中的relavent键和值对。
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveFirstToEndOf(
@@ -220,7 +220,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveFirstToEndOf(
   IncreaseSize(-1);
   memmove(array, array + 1, static_cast<size_t>(GetSize()*sizeof(MappingType)));
   recipient->CopyLastFrom(pair);
-  //update relavent key & value pair in its parent page.
+  //更新父页中的relavent键和值对。
   Page *page = buffer_pool_manager->FetchPage(GetParentPageId());
   B_PLUS_TREE_INTERNAL_PAGE *parent = reinterpret_cast<B_PLUS_TREE_INTERNAL_PAGE *>(page->GetData());
   parent->SetKeyAt(parent->ValueIndex(GetPageId()), array[0].first);
@@ -234,8 +234,8 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyLastFrom(const MappingType &item) {
   IncreaseSize(1);
 }
 /*
- * Remove the last key & value pair from this page to "recipient" page, then
- * update relavent key & value pair in its parent page.
+ *将此页面中的最后一个键值对删除到“收件人”页面，然后
+ *更新父页中的relavent键和值对。
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveLastToFrontOf(
@@ -303,4 +303,4 @@ template class BPlusTreeLeafPage<GenericKey<32>, RID,
                                        GenericComparator<32>>;
 template class BPlusTreeLeafPage<GenericKey<64>, RID,
                                        GenericComparator<64>>;
-} // namespace scudb
+}

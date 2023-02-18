@@ -13,7 +13,7 @@ namespace scudb {
 INDEX_TEMPLATE_ARGUMENTS
 class IndexIterator {
 public:
-  // you may define your own constructor based on your member variables
+  // 您可以根据成员变量定义自己的构造函数
   IndexIterator(B_PLUS_TREE_LEAF_PAGE_TYPE *leaf, int index, BufferPoolManager *bufferPoolManager);
   ~IndexIterator();
 
@@ -43,7 +43,7 @@ public:
   }
 
 private:
-  // add your own private member variables here
+  // 在此处添加您自己的私有成员变量
   void UnlockAndUnPin() {
     bufferPoolManager_->FetchPage(leaf_->GetPageId())->RUnlatch();
     bufferPoolManager_->UnpinPage(leaf_->GetPageId(), false);

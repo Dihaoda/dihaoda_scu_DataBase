@@ -15,7 +15,7 @@ void TablePage::Init(page_id_t page_id, size_t page_size,
                      Transaction *txn) {
   memcpy(GetData(), &page_id, 4); // set page_id
   if (ENABLE_LOGGING) {
-    // TODO: add your logging logic here
+    // TODO: 在此处添加日志记录逻辑
   }
   SetPrevPageId(prev_page_id);
   SetNextPageId(INVALID_PAGE_ID);
@@ -51,10 +51,10 @@ bool TablePage::InsertTuple(const Tuple &tuple, RID &rid, Transaction *txn,
                             LogManager *log_manager) {
   assert(tuple.size_ > 0);
   if (GetFreeSpaceSize() < tuple.size_) {
-    return false; // not enough space
+    return false; // 空间不足
   }
 
-  // try to reuse a free slot first
+  // 首先尝试重新使用空闲插槽
   int i;
   for (i = 0; i < GetTupleCount(); ++i) {
     rid.Set(GetPageId(), i);
@@ -69,13 +69,13 @@ bool TablePage::InsertTuple(const Tuple &tuple, RID &rid, Transaction *txn,
     }
   }
 
-  // no free slot left
+  // 没有剩余的空闲插槽
   if (i == GetTupleCount() && GetFreeSpaceSize() < tuple.size_ + 8) {
-    return false; // not enough space
+    return false; // 空间不足
   }
 
   SetFreeSpacePointer(GetFreeSpacePointer() -
-                      tuple.size_); // update free space pointer first
+                      tuple.size_); // 首先更新可用空间指针
   memcpy(GetData() + GetFreeSpacePointer(), tuple.data_, tuple.size_);
   SetTupleOffset(i, GetFreeSpacePointer());
   SetTupleSize(i, tuple.size_);
@@ -83,20 +83,20 @@ bool TablePage::InsertTuple(const Tuple &tuple, RID &rid, Transaction *txn,
     rid.Set(GetPageId(), i);
     SetTupleCount(GetTupleCount() + 1);
   }
-  // write the log after set rid
+  // 设置rid后写入日志
   if (ENABLE_LOGGING) {
-    // acquire the exclusive lock
+    // 获取独占锁
     assert(lock_manager->LockExclusive(txn, rid.Get()));
-    // TODO: add your logging logic here
+    // TODO:在此处添加日志记录逻辑
   }
   // LOG_DEBUG("Tuple inserted");
   return true;
 }
 
 /*
- * MarkDelete method does not truly delete a tuple from table page
- * Instead it set the tuple as 'deleted' by changing the tuple size metadata to
- * negative so that no other transaction can reuse this slot
+ *MarkDelete方法不会真正从表页中删除元组
+ *相反，它通过将元组大小元数据更改为
+ *否定，这样其他事务都不能重用此槽
  *
  */
 bool TablePage::MarkDelete(const RID &rid, Transaction *txn,
@@ -118,20 +118,20 @@ bool TablePage::MarkDelete(const RID &rid, Transaction *txn,
   }
 
   if (ENABLE_LOGGING) {
-    // acquire exclusive lock
-    // if has shared lock
+    // 获取独占锁
+    // 如果具有共享锁
     if (txn->GetSharedLockSet()->find(rid) != txn->GetSharedLockSet()->end()) {
       if (!lock_manager->LockUpgrade(txn, rid))
         return false;
     } else if (txn->GetExclusiveLockSet()->find(rid) ==
                    txn->GetExclusiveLockSet()->end() &&
-               !lock_manager->LockExclusive(txn, rid)) { // no shared lock
+               !lock_manager->LockExclusive(txn, rid)) { // 无共享锁
       return false;
     }
-    // TODO: add your logging logic here
+    // TODO:在此处添加日志记录逻辑
   }
 
-  // set tuple size to negative value
+  // 将元组大小设置为负值
   if (tuple_size > 0)
     SetTupleSize(slot_num, -tuple_size);
   return true;
@@ -156,13 +156,13 @@ bool TablePage::UpdateTuple(const Tuple &new_tuple, Tuple &old_tuple,
     return false;
   }
   if (GetFreeSpaceSize() < new_tuple.size_ - tuple_size) {
-    // should delete/insert because not enough space
+    // 应删除/插入，因为空间不足
     return false;
   }
 
-  // copy out old value
+  // 复制旧值
   int32_t tuple_offset =
-      GetTupleOffset(slot_num); // the tuple offset of the old tuple
+      GetTupleOffset(slot_num); // 旧元组的元组偏移量
   old_tuple.size_ = tuple_size;
   if (old_tuple.allocated_)
     delete[] old_tuple.data_;
@@ -172,8 +172,8 @@ bool TablePage::UpdateTuple(const Tuple &new_tuple, Tuple &old_tuple,
   old_tuple.allocated_ = true;
 
   if (ENABLE_LOGGING) {
-    // acquire exclusive lock
-    // if has shared lock
+    // 获取独占锁
+    // 如果具有共享锁
     if (txn->GetSharedLockSet()->find(rid) != txn->GetSharedLockSet()->end()) {
       if (!lock_manager->LockUpgrade(txn, rid))
         return false;
@@ -182,22 +182,22 @@ bool TablePage::UpdateTuple(const Tuple &new_tuple, Tuple &old_tuple,
                !lock_manager->LockExclusive(txn, rid)) { // no shared lock
       return false;
     }
-    // TODO: add your logging logic here
+    // TODO:在此处添加日志记录逻辑
   }
 
-  // update
+  // 更新
   int32_t free_space_pointer =
-      GetFreeSpacePointer(); // old pointer to the free space
+      GetFreeSpacePointer(); // 指向可用空间的旧指针
   assert(tuple_offset >= free_space_pointer);
   memmove(GetData() + free_space_pointer + tuple_size - new_tuple.size_,
           GetData() + free_space_pointer, tuple_offset - free_space_pointer);
   SetFreeSpacePointer(free_space_pointer + tuple_size - new_tuple.size_);
   memcpy(GetData() + tuple_offset + tuple_size - new_tuple.size_,
          new_tuple.data_,
-         new_tuple.size_);                 // copy new tuple
-  SetTupleSize(slot_num, new_tuple.size_); // update tuple size in slot
+         new_tuple.size_);                 // 复制新元组
+  SetTupleSize(slot_num, new_tuple.size_); // 更新插槽中的元组大小
   for (int i = 0; i < GetTupleCount();
-       ++i) { // update tuple offsets (including the updated one)
+       ++i) { // 更新元组偏移量（包括更新的元组偏移量）
     int32_t tuple_offset_i = GetTupleOffset(i);
     if (GetTupleSize(i) > 0 && tuple_offset_i < tuple_offset + tuple_size) {
       SetTupleOffset(i, tuple_offset_i + tuple_size - new_tuple.size_);
@@ -207,22 +207,22 @@ bool TablePage::UpdateTuple(const Tuple &new_tuple, Tuple &old_tuple,
 }
 
 /*
- * ApplyDelete function truly delete a tuple from table page, and make the slot
- * available for use again.
- * This function is called when a transaction commits or when you undo insert
+ *ApplyDelete函数真正从表页中删除元组，并使槽
+ *可再次使用。
+ *当事务提交或撤消插入时调用此函数
  */
 void TablePage::ApplyDelete(const RID &rid, Transaction *txn,
                             LogManager *log_manager) {
   int slot_num = rid.GetSlotNum();
   assert(slot_num < GetTupleCount());
-  // the tuple offset of the deleted tuple
+  // 已删除元组的元组偏移量
   int32_t tuple_offset = GetTupleOffset(slot_num);
   int32_t tuple_size = GetTupleSize(slot_num);
-  if (tuple_size < 0) { // commit delete
+  if (tuple_size < 0) { // 提交删除
     tuple_size = -tuple_size;
-  } // else: rollback insert op
+  } // else: 回滚插入操作
 
-  // copy out delete value, for undo purpose
+  // 复制删除值，用于撤消
   Tuple delete_tuple;
   delete_tuple.size_ = tuple_size;
   delete_tuple.data_ = new char[delete_tuple.size_];
@@ -231,20 +231,20 @@ void TablePage::ApplyDelete(const RID &rid, Transaction *txn,
   delete_tuple.allocated_ = true;
 
   if (ENABLE_LOGGING) {
-    // must already grab the exclusive lock
+    // 必须已获取独占锁
     assert(txn->GetExclusiveLockSet()->find(rid) !=
            txn->GetExclusiveLockSet()->end());
-    // TODO: add your logging logic here
+    // TODO:在此处添加日志记录逻辑
   }
 
   int32_t free_space_pointer =
-      GetFreeSpacePointer(); // old pointer to the free space
+      GetFreeSpacePointer(); // 指向可用空间的旧指针
   assert(tuple_offset >= free_space_pointer);
   memmove(GetData() + free_space_pointer + tuple_size,
           GetData() + free_space_pointer, tuple_offset - free_space_pointer);
   SetFreeSpacePointer(free_space_pointer + tuple_size);
   SetTupleSize(slot_num, 0);
-  SetTupleOffset(slot_num, 0); // invalid offset
+  SetTupleOffset(slot_num, 0); // 无效偏移量
   for (int i = 0; i < GetTupleCount(); ++i) {
     int32_t tuple_offset_i = GetTupleOffset(i);
     if (GetTupleSize(i) != 0 && tuple_offset_i < tuple_offset) {
@@ -254,26 +254,26 @@ void TablePage::ApplyDelete(const RID &rid, Transaction *txn,
 }
 
 /*
- * RollbackDelete is a complementary function wrt MarkDelete function.
- * It flip the tuple size from negative to positive, so that the tuple becomes
- * visible again.
- * This function is called when abort a transaction
+ *RollbackDelete是与MarkDelete函数相关的补充函数。
+ *它将元组大小从负值翻转为正值，从而使元组变为
+ *再次可见。
+ *中止事务时调用此函数
  */
 void TablePage::RollbackDelete(const RID &rid, Transaction *txn,
                                LogManager *log_manager) {
   if (ENABLE_LOGGING) {
-    // must have already grab the exclusive lock
+    // 必须已获取独占锁
     assert(txn->GetExclusiveLockSet()->find(rid) !=
            txn->GetExclusiveLockSet()->end());
 
-    // TODO: add your logging logic here
+    // TODO:在此处添加日志记录逻辑
   }
 
   int slot_num = rid.GetSlotNum();
   assert(slot_num < GetTupleCount());
   int32_t tuple_size = GetTupleSize(slot_num);
 
-  // set tuple size to positive value
+  // 将元组大小设置为正值
   if (tuple_size < 0)
     SetTupleSize(slot_num, -tuple_size);
 }
@@ -294,7 +294,7 @@ bool TablePage::GetTuple(const RID &rid, Tuple &tuple, Transaction *txn,
   }
 
   if (ENABLE_LOGGING) {
-    // acquire shared lock
+    // 获取共享锁
     if (txn->GetExclusiveLockSet()->find(rid) ==
             txn->GetExclusiveLockSet()->end() &&
         txn->GetSharedLockSet()->find(rid) == txn->GetSharedLockSet()->end() &&
@@ -324,7 +324,7 @@ bool TablePage::GetFirstTupleRid(RID &first_rid) {
       return true;
     }
   }
-  // there is no tuple within current page
+  // 当前页面中没有元组
   first_rid.Set(INVALID_PAGE_ID, -1);
   return false;
 }
@@ -337,7 +337,7 @@ bool TablePage::GetNextTupleRid(const RID &cur_rid, RID &next_rid) {
       return true;
     }
   }
-  return false; // End of last tuple
+  return false; // 最后一个元组的结尾
 }
 
 /**
@@ -379,8 +379,8 @@ void TablePage::SetTupleCount(int32_t tuple_count) {
   memcpy(GetData() + 20, &tuple_count, 4);
 }
 
-// for free space calculation
+// 用于自由空间计算
 int32_t TablePage::GetFreeSpaceSize() {
   return GetFreeSpacePointer() - 24 - GetTupleCount() * 8;
 }
-} // namespace scudb
+}

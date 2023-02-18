@@ -1,12 +1,12 @@
 /**
  * b_plus_tree.h
  *
- * Implementation of simple b+ tree data structure where internal pages direct
- * the search and leaf pages contain actual data.
- * (1) We only support unique key
- * (2) support insert & remove
- * (3) The structure should shrink and grow dynamically
- * (4) Implement index iterator for range scan
+ *实现内部页面指向的简单b+树数据结构
+ *搜索页和叶页包含实际数据。
+ *（1）我们只支持唯一密钥
+ *（2）支架插入和移除
+ *（3）结构应动态收缩和增长
+ *（4）实现范围扫描的索引迭代器
  */
 #pragma once
 
@@ -21,7 +21,7 @@
 namespace scudb {
 
 #define BPLUSTREE_TYPE BPlusTree<KeyType, ValueType, KeyComparator>
-// Main class providing the API for the Interactive B+ Tree.
+// 提供交互式B+树API的主类。
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTree {
 public:
@@ -30,35 +30,35 @@ public:
                      const KeyComparator &comparator,
                      page_id_t root_page_id = INVALID_PAGE_ID);
 
-  // Returns true if this B+ tree has no keys and values.
+  // 如果此B+树没有键和值，则返回true。
   bool IsEmpty() const;
 
-  // Insert a key-value pair into this B+ tree.
+  // 将键值对插入此B+树。
   bool Insert(const KeyType &key, const ValueType &value,
               Transaction *transaction = nullptr);
 
-  // Remove a key and its value from this B+ tree.
+  // 从这个B+树中删除一个键及其值。
   void Remove(const KeyType &key, Transaction *transaction = nullptr);
 
-  // return the value associated with a given key
+  // 返回与给定键关联的值
   bool GetValue(const KeyType &key, std::vector<ValueType> &result,
                 Transaction *transaction = nullptr);
 
-  // index iterator
+  // 索引迭代器
   INDEXITERATOR_TYPE Begin();
   INDEXITERATOR_TYPE Begin(const KeyType &key);
 
-  // Print this B+ tree to stdout using a simple command-line
+  // 使用简单的命令行将此B+树打印到stdout
   std::string ToString(bool verbose = false);
 
-  // read data from file and insert one by one
+  // 从文件中读取数据并逐个插入
   void InsertFromFile(const std::string &file_name,
                       Transaction *transaction = nullptr);
 
-  // read data from file and remove one by one
+  // 从文件中读取数据并逐个删除
   void RemoveFromFile(const std::string &file_name,
                       Transaction *transaction = nullptr);
-  // expose for test purpose
+  // 试验用暴露
   B_PLUS_TREE_LEAF_PAGE_TYPE *FindLeafPage(const KeyType &key,
                                            bool leftMost = false,
                                            OpType op = OpType::READ,

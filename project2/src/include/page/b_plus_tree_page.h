@@ -1,10 +1,10 @@
 /**
  * b_plus_tree_page.h
  *
- * Both internal and leaf page are inherited from this page.
+ *内部页和叶页都从该页继承。
  *
- * It actually serves as a header part for each B+ tree page and
- * contains information shared by both leaf page and internal page.
+ *它实际上是每个B+树页面的标题部分
+ *包含叶页和内部页共享的信息。
  *
  * Header format (size in byte, 20 bytes in total):
  * ----------------------------------------------------------------------------
@@ -32,10 +32,10 @@ namespace scudb {
 #define INDEX_TEMPLATE_ARGUMENTS                                               \
   template <typename KeyType, typename ValueType, typename KeyComparator>
 
-// define page type enum
+// 定义页面类型枚举
 enum class IndexPageType { INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE };
 enum class OpType { READ = 0, INSERT, DELETE };
-// Abstract class.
+// 抽象类。
 class BPlusTreePage {
 public:
   bool IsLeafPage() const;
@@ -60,7 +60,7 @@ public:
 
   bool IsSafe(OpType op);
 private:
-  // member variable, attributes that both internal and leaf page share
+  // 成员变量，内部页和叶页共享的属性
   IndexPageType page_type_;
   lsn_t lsn_;
   int size_;
@@ -69,5 +69,4 @@ private:
   page_id_t page_id_;
 
 };
-
 } // namespace scudb

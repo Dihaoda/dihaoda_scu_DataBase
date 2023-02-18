@@ -1,9 +1,9 @@
 /**
  * header_page.h
  *
- * Database use the first page (page_id = 0) as header page to store metadata, in
- * our case, we will contain information about table/index name (length less than
- * 32 bytes) and their corresponding root_id
+ *数据库使用第一页（page_id=0）作为头页来存储元数据，在
+ *在本例中，我们将包含有关表/索引名称（长度小于
+ *32字节）及其对应的root_id
  *
  * Format (size in byte):
  *  -----------------------------------------------------------------
@@ -23,7 +23,7 @@ class HeaderPage : public Page {
 public:
   void Init() { SetRecordCount(0); }
   /**
-   * Record related
+   * 与记录相关
    */
   bool InsertRecord(const std::string &name, const page_id_t root_id);
   bool DeleteRecord(const std::string &name);

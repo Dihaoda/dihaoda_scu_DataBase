@@ -1,9 +1,9 @@
 /**
  * page.h
  *
- * Wrapper around actual data page in main memory and also contains bookkeeping
- * information used by buffer pool manager like pin_count/dirty_flag/page_id.
- * Use page as a basic unit within the database system
+ *主内存中实际数据页的包装器，还包含簿记
+ *缓冲池管理器使用的信息，如pin_count/dirty_flag/page_id。
+ *将页面用作数据库系统中的基本单元
  */
 
 #pragma once
@@ -22,13 +22,13 @@ class Page {
 public:
   Page() { ResetMemory(); }
   ~Page(){};
-  // get actual data page content
+  // 获取实际数据页内容
   inline char *GetData() { return data_; }
-  // get page id
+  // 获取页面id
   inline page_id_t GetPageId() { return page_id_; }
-  // get page pin count
+  // 获取页面pin计数
   inline int GetPinCount() { return pin_count_; }
-  // method use to latch/unlatch page content
+  // 用于锁定/解锁页面内容的方法
   inline void WUnlatch() { rwlatch_.WUnlock(); }
   inline void WLatch() { rwlatch_.WLock(); }
   inline void RUnlatch() { rwlatch_.RUnlock(); }
@@ -38,7 +38,7 @@ public:
   inline void SetLSN(lsn_t lsn) { memcpy(GetData() + 4, &lsn, 4); }
 
 private:
-  // method used by buffer pool manager
+  // 缓冲池管理器使用的方法
   inline void ResetMemory() { memset(data_, 0, PAGE_SIZE); }
   // members
   char data_[PAGE_SIZE]; // actual data

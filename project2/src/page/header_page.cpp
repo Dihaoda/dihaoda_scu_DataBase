@@ -9,7 +9,7 @@
 namespace scudb {
 
 /**
- * Record related
+ * 与记录相关
  */
 bool HeaderPage::InsertRecord(const std::string &name,
                               const page_id_t root_id) {
@@ -18,10 +18,10 @@ bool HeaderPage::InsertRecord(const std::string &name,
 
   int record_num = GetRecordCount();
   int offset = 4 + record_num * 36;
-  // check for duplicate name
+  // 检查重复名称
   if (FindRecord(name) != -1)
     return false;
-  // copy record content
+  // 复制记录内容
   memcpy(GetData() + offset, name.c_str(), (name.length() + 1));
   memcpy((GetData() + offset + 32), &root_id, 4);
 
@@ -34,7 +34,7 @@ bool HeaderPage::DeleteRecord(const std::string &name) {
   assert(record_num > 0);
 
   int index = FindRecord(name);
-  // record does not exsit
+  // 记录不存在
   if (index == -1)
     return false;
   int offset = index * 36 + 4;
@@ -50,11 +50,11 @@ bool HeaderPage::UpdateRecord(const std::string &name,
   assert(name.length() < 32);
 
   int index = FindRecord(name);
-  // record does not exsit
+  // 记录不存在
   if (index == -1)
     return false;
   int offset = index * 36 + 4;
-  // update record content, only root_id
+  // 更新记录内容，仅root_id
   memcpy((GetData() + offset + 32), &root_id, 4);
 
   return true;
@@ -64,7 +64,7 @@ bool HeaderPage::GetRootId(const std::string &name, page_id_t &root_id) {
   assert(name.length() < 32);
 
   int index = FindRecord(name);
-  // record does not exsit
+  // 记录不存在
   if (index == -1)
     return false;
   int offset = (index + 1) * 36;
@@ -76,7 +76,7 @@ bool HeaderPage::GetRootId(const std::string &name, page_id_t &root_id) {
 /**
  * helper functions
  */
-// record count
+// 记录计数
 int HeaderPage::GetRecordCount() { return *reinterpret_cast<int *>(GetData()); }
 
 void HeaderPage::SetRecordCount(int record_count) {
@@ -93,4 +93,4 @@ int HeaderPage::FindRecord(const std::string &name) {
   }
   return -1;
 }
-} // namespace scudb
+}

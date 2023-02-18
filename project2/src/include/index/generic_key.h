@@ -1,11 +1,11 @@
 /**
  * generic_key.h
  *
- * Key used for indexing with opaque data
+ *用于索引不透明数据的键
  *
- * This key type uses an fixed length array to hold data for indexing
- * purposes, the actual size of which is specified and instantiated
- * with a template argument.
+ *此键类型使用固定长度数组来保存用于索引的数据
+ *目的，其实际大小已指定并实例化
+ *使用模板参数。
  */
 #pragma once
 
@@ -23,7 +23,7 @@ public:
     memcpy(data, tuple.GetData(), tuple.GetLength());
   }
 
-  // NOTE: for test purpose only
+  // 注：仅用于测试目的
   inline void SetFromInteger(int64_t key) {
     memset(data, 0, KeySize);
     memcpy(data, &key, sizeof(int64_t));
@@ -43,25 +43,25 @@ public:
     return Value::DeserializeFrom(data_ptr, column_type);
   }
 
-  // NOTE: for test purpose only
-  // interpret the first 8 bytes as int64_t from data vector
+  //注：仅用于测试目的
+  //从数据向量中将前8个字节解释为int64t
   inline int64_t ToString() const {
     return *reinterpret_cast<int64_t *>(const_cast<char *>(data));
   }
 
-  // NOTE: for test purpose only
-  // interpret the first 8 bytes as int64_t from data vector
+  //注：仅用于测试目的
+  //从数据向量中将前8个字节解释为int64t
   friend std::ostream &operator<<(std::ostream &os, const GenericKey &key) {
     os << key.ToString();
     return os;
   }
 
-  // actual location of data, extends past the end.
+  // 数据的实际位置延伸到末端。
   char data[KeySize];
 };
 
 /**
- * Function object returns true if lhs < rhs, used for trees
+ * 如果lhs＜rhs，则函数对象返回true，用于树
  */
 template <size_t KeySize> class GenericComparator {
 public:
